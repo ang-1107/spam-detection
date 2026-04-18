@@ -5,6 +5,7 @@ from nltk.stem.porter import PorterStemmer
 
 _ps = PorterStemmer()
 
+
 def ensure_nltk_resources() -> None:
     """Download NLTK data needed for tokenization and stopwords (handles NLTK 3.9+ punkt_tab)."""
     try:
@@ -24,6 +25,7 @@ def ensure_nltk_resources() -> None:
         nltk.data.find("corpora/stopwords")
     except LookupError:
         nltk.download("stopwords", quiet=True)
+
 
 def transform_text(text: str) -> str:
     """

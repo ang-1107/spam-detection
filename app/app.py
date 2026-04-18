@@ -15,9 +15,11 @@ st.title("SMS Spam Detection (TF-IDF + MultinomialNB)")
 
 ensure_nltk_resources()
 
+
 @st.cache_resource
 def _load():
     return load_artifacts()
+
 
 vectorizer, model = _load()
 

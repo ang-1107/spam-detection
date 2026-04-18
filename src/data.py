@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+
 def convert_windows1252_to_utf8(src_path: str, dest_path: str) -> None:
     """
     Equivalent to notebook's encoding conversion step:
@@ -12,6 +13,7 @@ def convert_windows1252_to_utf8(src_path: str, dest_path: str) -> None:
         data = src.read()
     with open(dest_path, "w", encoding="utf-8") as dest:
         dest.write(data)
+
 
 def load_and_clean_dataframe(csv_path_utf8: str) -> pd.DataFrame:
     """
@@ -25,7 +27,9 @@ def load_and_clean_dataframe(csv_path_utf8: str) -> pd.DataFrame:
     df = pd.read_csv(csv_path_utf8)
 
     # Removing extra unnecessary columns (if present)
-    drop_cols = [c for c in ["Unnamed: 2", "Unnamed: 3", "Unnamed: 4"] if c in df.columns]
+    drop_cols = [
+        c for c in ["Unnamed: 2", "Unnamed: 3", "Unnamed: 4"] if c in df.columns
+    ]
     if drop_cols:
         df.drop(columns=drop_cols, inplace=True)
 
@@ -39,6 +43,7 @@ def load_and_clean_dataframe(csv_path_utf8: str) -> pd.DataFrame:
 
     # Convert textual labels to numeric (ham/spam -> 0/1)
     from sklearn.preprocessing import LabelEncoder
+
     encoder = LabelEncoder()
     df["target"] = encoder.fit_transform(df["target"])
 

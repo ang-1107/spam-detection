@@ -7,7 +7,7 @@ import sys
 import time
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
@@ -49,12 +49,20 @@ DEFAULT_RAW_DIR = Path("data") / "raw"
 DEFAULT_SPAM_CSV = DEFAULT_RAW_DIR / "spam.csv"
 DEFAULT_SPAM_UTF8 = DEFAULT_RAW_DIR / "spam_utf8.csv"
 
+
 def ensure_dataset(spam_csv_path: Path):
     if spam_csv_path.exists():
         return
     print(f"Dataset not found at {spam_csv_path}. Downloading from Kaggle...")
     DEFAULT_RAW_DIR.mkdir(parents=True, exist_ok=True)
-    subprocess.check_call([sys.executable, "scripts/download_dataset.py", "--out-dir", str(DEFAULT_RAW_DIR)])
+    subprocess.check_call(
+        [
+            sys.executable,
+            "scripts/download_dataset.py",
+            "--out-dir",
+            str(DEFAULT_RAW_DIR),
+        ]
+    )
 
 
 @dataclass(frozen=True)
@@ -91,7 +99,9 @@ def transform_text_variant(text: str, cfg: PreprocessConfig) -> str:
 
     filtered = []
     for t in tokens:
-        if (not cfg.remove_stopwords or t not in stops) and (not cfg.remove_punctuation or t not in punct):
+        if (not cfg.remove_stopwords or t not in stops) and (
+            not cfg.remove_punctuation or t not in punct
+        ):
             filtered.append(t)
 
     if cfg.stemming:
@@ -159,7 +169,9 @@ def evaluate_run(
     positive_label: int = 1,
 ) -> Dict[str, Any]:
     # preprocess -> transformed_text
-    X_transformed = np.array([transform_text_variant(t, preprocess_cfg) for t in X_text], dtype=object)
+    X_transformed = np.array(
+        [transform_text_variant(t, preprocess_cfg) for t in X_text], dtype=object
+    )
 
     # split
     X_train_txt, X_test_txt, y_train, y_test = train_test_split(
@@ -190,9 +202,7 @@ def evaluate_run(
     y_pred = clf.predict(X_test_eval)
 
     acc = accuracy_score(y_test, y_pred)
-    prec = precision_score(
-        y_test, y_pred, pos_label=positive_label, zero_division="0"
-    )
+    prec = precision_score(y_test, y_pred, pos_label=positive_label, zero_division="0")
     f1 = f1_score(y_test, y_pred, pos_label=positive_label, zero_division="0")
     cm = confusion_matrix(y_test, y_pred).tolist()
 
@@ -207,7 +217,9 @@ def evaluate_run(
 
 
 def main():
-    p = argparse.ArgumentParser(description="Benchmark vectorizers + models + ablations for SMS spam detection.")
+    p = argparse.ArgumentParser(
+        description="Benchmark vectorizers + models + ablations for SMS spam detection."
+    )
     p.add_argument(
         "--input",
         default=str(DEFAULT_SPAM_CSV),
@@ -220,9 +232,13 @@ def main():
     )
     p.add_argument("--test-size", type=float, default=0.2)
     p.add_argument("--random-state", type=int, default=2)
-    p.add_argument("--max-runs", type=int, default=0, help="Optional cap on runs (0 = no cap).")
+    p.add_argument(
+        "--max-runs", type=int, default=0, help="Optional cap on runs (0 = no cap)."
+    )
     p.add_argument("--out-csv", default="benchmark_results.csv")
-    p.add_argument("--metric", choices=["precision", "f1", "accuracy"], default="precision")
+    p.add_argument(
+        "--metric", choices=["precision", "f1", "accuracy"], default="precision"
+    )
     args = p.parse_args()
 
     ensure_nltk_resources()
@@ -252,77 +268,122 @@ def main():
 
     # --- Vectorizers + hyperparams ---
     vectorizer_grids: List[Tuple[str, Dict[str, List[Any]]]] = [
-        ("count", {
-            "ngram_range": [(1, 1), (1, 2)],
-            "max_features": [None, 3000, 5000],
-            "min_df": [1, 2],
-        }),
-        ("tfidf", {
-            "ngram_range": [(1, 1), (1, 2)],
-            "max_features": [None, 3000, 5000],
-            "min_df": [1, 2],
-            "use_idf": [True],
-            "sublinear_tf": [False, True],
-        }),
+        (
+            "count",
+            {
+                "ngram_range": [(1, 1), (1, 2)],
+                "max_features": [None, 3000, 5000],
+                "min_df": [1, 2],
+            },
+        ),
+        (
+            "tfidf",
+            {
+                "ngram_range": [(1, 1), (1, 2)],
+                "max_features": [None, 3000, 5000],
+                "min_df": [1, 2],
+                "use_idf": [True],
+                "sublinear_tf": [False, True],
+            },
+        ),
     ]
 
     # --- Models + hyperparams ---
     model_grids: List[Tuple[str, Dict[str, List[Any]]]] = [
-        ("GaussianNB", {
-            # no major hyperparams
-        }),
-        ("MultinomialNB", {
-            "alpha": [0.1, 0.5, 1.0],
-        }),
-        ("BernoulliNB", {
-            "alpha": [0.1, 0.5, 1.0],
-        }),
-        ("LogReg", {
-            "solver": ["liblinear"],
-            "penalty": ["l1", "l2"],
-            "C": [0.5, 1.0, 2.0],
-            "max_iter": [1000],
-        }),
-        ("LinearSVC", {
-            "C": [0.5, 1.0, 2.0],
-        }),
-        ("SVC_sigmoid", {
-            "kernel": ["sigmoid"],
-            "gamma": [1.0, "scale"],
-            "C": [1.0, 2.0],
-        }),
-        ("KNN", {
-            "n_neighbors": [3, 5, 7],
-        }),
-        ("DT", {
-            "max_depth": [None, 5, 10],
-            "min_samples_split": [2, 5],
-        }),
-        ("RF", {
-            "n_estimators": [50, 200],
-            "random_state": [args.random_state],
-            "max_depth": [None, 10],
-        }),
-        ("ExtraTrees", {
-            "n_estimators": [50, 200],
-            "random_state": [args.random_state],
-            "max_depth": [None, 10],
-        }),
-        ("AdaBoost", {
-            "n_estimators": [50, 200],
-            "random_state": [args.random_state],
-            "learning_rate": [0.5, 1.0],
-        }),
-        ("Bagging", {
-            "n_estimators": [50, 200],
-            "random_state": [args.random_state],
-        }),
-        ("GBDT", {
-            "n_estimators": [50, 200],
-            "random_state": [args.random_state],
-            "learning_rate": [0.05, 0.1],
-            "max_depth": [3],
-        }),
+        (
+            "GaussianNB",
+            {
+                # no major hyperparams
+            },
+        ),
+        (
+            "MultinomialNB",
+            {
+                "alpha": [0.1, 0.5, 1.0],
+            },
+        ),
+        (
+            "BernoulliNB",
+            {
+                "alpha": [0.1, 0.5, 1.0],
+            },
+        ),
+        (
+            "LogReg",
+            {
+                "solver": ["liblinear"],
+                "penalty": ["l1", "l2"],
+                "C": [0.5, 1.0, 2.0],
+                "max_iter": [1000],
+            },
+        ),
+        (
+            "LinearSVC",
+            {
+                "C": [0.5, 1.0, 2.0],
+            },
+        ),
+        (
+            "SVC_sigmoid",
+            {
+                "kernel": ["sigmoid"],
+                "gamma": [1.0, "scale"],
+                "C": [1.0, 2.0],
+            },
+        ),
+        (
+            "KNN",
+            {
+                "n_neighbors": [3, 5, 7],
+            },
+        ),
+        (
+            "DT",
+            {
+                "max_depth": [None, 5, 10],
+                "min_samples_split": [2, 5],
+            },
+        ),
+        (
+            "RF",
+            {
+                "n_estimators": [50, 200],
+                "random_state": [args.random_state],
+                "max_depth": [None, 10],
+            },
+        ),
+        (
+            "ExtraTrees",
+            {
+                "n_estimators": [50, 200],
+                "random_state": [args.random_state],
+                "max_depth": [None, 10],
+            },
+        ),
+        (
+            "AdaBoost",
+            {
+                "n_estimators": [50, 200],
+                "random_state": [args.random_state],
+                "learning_rate": [0.5, 1.0],
+            },
+        ),
+        (
+            "Bagging",
+            {
+                "n_estimators": [50, 200],
+                "random_state": [args.random_state],
+            },
+        ),
+        (
+            "GBDT",
+            {
+                "n_estimators": [50, 200],
+                "random_state": [args.random_state],
+                "learning_rate": [0.05, 0.1],
+                "max_depth": [3],
+            },
+        ),
     ]
 
     model_grids.append(
@@ -353,7 +414,11 @@ def main():
             for vec_params in iter_param_grid(vec_grid):
                 for model_name, model_grid in model_grids:
                     # Some models have empty grids; iterate once
-                    model_param_iter = [dict()] if not model_grid else list(iter_param_grid(model_grid))
+                    model_param_iter = (
+                        [dict()]
+                        if not model_grid
+                        else list(iter_param_grid(model_grid))
+                    )
 
                     for model_params in model_param_iter:
                         run_count += 1
@@ -429,7 +494,9 @@ def main():
                         # Light progress output
                         if run_id % 25 == 0:
                             elapsed = time.time() - start
-                            print(f"[{run_id}] elapsed={elapsed:.1f}s best_{args.metric}={best_score:.4f}")
+                            print(
+                                f"[{run_id}] elapsed={elapsed:.1f}s best_{args.metric}={best_score:.4f}"
+                            )
 
                     if args.max_runs and run_count >= args.max_runs:
                         break

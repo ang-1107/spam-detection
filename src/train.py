@@ -14,6 +14,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, precision_score
 from .features import add_transformed_text, fit_tfidf
 from .paths import DEFAULT_MODEL_PATH, DEFAULT_VECTORIZER_PATH
 
+
 @dataclass
 class TrainConfig:
     test_size: float = 0.2
@@ -21,11 +22,12 @@ class TrainConfig:
     vectorizer_path: str = str(DEFAULT_VECTORIZER_PATH)
     model_path: str = str(DEFAULT_MODEL_PATH)
 
+
 def train_mnb_tfidf(df: pd.DataFrame, cfg: TrainConfig) -> Dict[str, Any]:
     """
-      - TF-IDF
-      - MultinomialNB
-      - save under artifacts/ (defaults: vectorizer.pkl, model.pkl)
+    - TF-IDF
+    - MultinomialNB
+    - save under artifacts/ (defaults: vectorizer.pkl, model.pkl)
     """
     df2 = add_transformed_text(df)
 

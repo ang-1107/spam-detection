@@ -10,6 +10,7 @@ from src.paths import DEFAULT_MODEL_PATH, DEFAULT_VECTORIZER_PATH
 from src.preprocess import ensure_nltk_resources
 from src.inference import load_artifacts, predict_text
 
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--text", required=True)
@@ -21,6 +22,7 @@ def main():
     vectorizer, model = load_artifacts(args.vectorizer, args.model)
     pred = predict_text(args.text, vectorizer, model)
     print(pred)
+
 
 if __name__ == "__main__":
     main()

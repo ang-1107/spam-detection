@@ -16,17 +16,36 @@ DEFAULT_RAW_DIR = Path("data") / "raw"
 DEFAULT_SPAM_CSV = DEFAULT_RAW_DIR / "spam.csv"
 DEFAULT_SPAM_UTF8 = DEFAULT_RAW_DIR / "spam_utf8.csv"
 
+
 def ensure_dataset(spam_csv_path: Path):
     if spam_csv_path.exists():
         return
     print(f"Dataset not found at {spam_csv_path}. Downloading from Kaggle...")
     DEFAULT_RAW_DIR.mkdir(parents=True, exist_ok=True)
-    subprocess.check_call([sys.executable, "scripts/download_dataset.py", "--out-dir", str(DEFAULT_RAW_DIR)])
+    subprocess.check_call(
+        [
+            sys.executable,
+            "scripts/download_dataset.py",
+            "--out-dir",
+            str(DEFAULT_RAW_DIR),
+        ]
+    )
+
 
 def main():
-    p = argparse.ArgumentParser(description="Train TF-IDF + MultinomialNB spam classifier (notebook-equivalent).")
-    p.add_argument("--input", default=str(DEFAULT_SPAM_CSV), help=f"Input spam.csv (default: {DEFAULT_SPAM_CSV})")
-    p.add_argument("--utf8", default=str(DEFAULT_SPAM_UTF8), help=f"UTF-8 converted CSV output (default: {DEFAULT_SPAM_UTF8})")
+    p = argparse.ArgumentParser(
+        description="Train TF-IDF + MultinomialNB spam classifier (notebook-equivalent)."
+    )
+    p.add_argument(
+        "--input",
+        default=str(DEFAULT_SPAM_CSV),
+        help=f"Input spam.csv (default: {DEFAULT_SPAM_CSV})",
+    )
+    p.add_argument(
+        "--utf8",
+        default=str(DEFAULT_SPAM_UTF8),
+        help=f"UTF-8 converted CSV output (default: {DEFAULT_SPAM_UTF8})",
+    )
     p.add_argument(
         "--vectorizer",
         default=str(DEFAULT_VECTORIZER_PATH),
@@ -67,6 +86,7 @@ def main():
     print(result["metrics"])
     print(f"Saved vectorizer to: {result['vectorizer_path']}")
     print(f"Saved model to: {result['model_path']}")
+
 
 if __name__ == "__main__":
     main()

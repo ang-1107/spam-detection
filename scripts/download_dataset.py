@@ -3,6 +3,7 @@ import os
 import zipfile
 from pathlib import Path
 
+
 def _require_kaggle_auth():
     # Kaggle package will read ~/.kaggle/kaggle.json or env vars.
     # Give a clear error if neither looks present.
@@ -16,11 +17,20 @@ def _require_kaggle_auth():
             "  2) environment variables KAGGLE_USERNAME and KAGGLE_KEY\n"
         )
 
+
 def main():
-    p = argparse.ArgumentParser(description="Download SMS Spam Collection dataset from Kaggle.")
+    p = argparse.ArgumentParser(
+        description="Download SMS Spam Collection dataset from Kaggle."
+    )
     p.add_argument("--dataset", default="uciml/sms-spam-collection-dataset")
-    p.add_argument("--out-dir", default="data/raw", help="Directory to store downloaded dataset files")
-    p.add_argument("--force", action="store_true", help="Re-download even if files already exist")
+    p.add_argument(
+        "--out-dir",
+        default="data/raw",
+        help="Directory to store downloaded dataset files",
+    )
+    p.add_argument(
+        "--force", action="store_true", help="Re-download even if files already exist"
+    )
     args = p.parse_args()
 
     out_dir = Path(args.out_dir)
@@ -76,6 +86,7 @@ def main():
         )
 
     print(f"Ready: {spam_csv}")
+
 
 if __name__ == "__main__":
     main()
