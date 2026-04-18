@@ -311,8 +311,10 @@ def main():
         (
             "LogReg",
             {
-                "solver": ["liblinear"],
-                "penalty": ["l1", "l2"],
+                # sklearn>=1.8 deprecates `penalty`; use l1_ratio instead.
+                # l1_ratio=1.0 ~ l1, l1_ratio=0.0 ~ l2
+                "solver": ["saga"],
+                "l1_ratio": [1.0, 0.0],
                 "C": [0.5, 1.0, 2.0],
                 "max_iter": [1000],
             },

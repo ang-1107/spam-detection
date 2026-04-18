@@ -1,5 +1,11 @@
 # SMS Spam Detection
 
+![Python](https://img.shields.io/badge/Python-3.10-3776AB?logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-%23FF4B4B.svg?&logo=streamlit&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikit-learn&logoColor=white)
+![NLTK](https://img.shields.io/badge/NLTK-007ACC?logo=nltk&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-150458?logo=pandas&logoColor=white)
+
 An end-to-end **machine learning + NLP** pipeline that classifies SMS messages as **ham** (legitimate) or **spam** using classical text features and scikit-learn. The default model pairs **TF–IDF** vectorization with **Multinomial Naive Bayes**, with optional benchmarking across many other vectorizers and classifiers.
 
 ---
