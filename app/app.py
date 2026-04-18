@@ -17,7 +17,7 @@ ensure_nltk_resources()
 
 @st.cache_resource
 def _load():
-    return load_artifacts("vectorizer.pkl", "model.pkl")
+    return load_artifacts()
 
 vectorizer, model = _load()
 

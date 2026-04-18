@@ -77,9 +77,7 @@ The flow from raw data to a prediction is:
    `src/features.py` applies `transform_text` to every row (column **`transformed_text`**) and fits a **`TfidfVectorizer`** on the training corpus (sparse matrices internally; same modeling behavior as dense for this linear generative model).
 
 6. **Training & evaluation**  
-   `src/train.py` splits data (with **stratification** when the split is valid for all classes), fits **MultinomialNB**, reports **accuracy**, **precision** (spam = positive class), and a **confusion matrix**, then saves:
-   - **`vectorizer.pkl`**
-   - **`model.pkl`**
+   `src/train.py` splits data (with **stratification** when the split is valid for all classes), fits **MultinomialNB**, reports **accuracy**, **precision** (spam = positive class), and a **confusion matrix**,    then saves trained files under **`artifacts/`**.
 
 7. **Inference**  
    `src/inference.py` loads both pickles, runs **`transform_text`** on new user text, **transforms** with the saved vectorizer, and returns **`0`** (ham) or **`1`** (spam). The Streamlit app (`app/app.py`) and CLI (`app/predict_cli.py`) call this layer.
@@ -99,7 +97,9 @@ The flow from raw data to a prediction is:
 | `src/train.py` | Train MultinomialNB, metrics, save pickles |
 | `src/inference.py` | Load artifacts, `predict_text` |
 | `scripts/download_dataset.py` | Download & unzip Kaggle dataset → `data/raw/spam.csv` |
-| `scripts/train_model.py` | CLI entry: ensure data → train → write `vectorizer.pkl` / `model.pkl` |
+| `scripts/train_model.py` | CLI entry: ensure data → train → write `artifacts/*.pkl` |
+| `src/paths.py` | Default `artifacts/` paths for training and inference |
+| `artifacts/` | Saved `vectorizer.pkl` + `model.pkl` (commit these for Streamlit Cloud) |
 | `scripts/benchmark_models.py` | Grid/ablation experiments → CSV results |
 | `app/app.py` | Streamlit UI |
 | `app/predict_cli.py` | CLI for single-message prediction |
@@ -197,11 +197,11 @@ Common options:
 
 ```bash
 python scripts/train_model.py --test-size 0.2 --random-state 2
-python scripts/train_model.py --vectorizer my_vectorizer.pkl --model my_model.pkl
+python scripts/train_model.py --vectorizer path/to/vectorizer.pkl --model path/to/model.pkl
 python scripts/train_model.py --input data/raw/spam.csv --utf8 data/raw/spam_utf8.csv
 ```
 
-This writes **`vectorizer.pkl`** and **`model.pkl`** in the current working directory unless you pass custom paths.
+By default this writes **`artifacts/vectorizer.pkl`** and **`artifacts/model.pkl`** (the `artifacts/` directory is created if needed). Override with `--vectorizer` / `--model` if you want different locations.
 
 ### 7. Run the Streamlit web app
 
@@ -215,7 +215,7 @@ Open the URL Streamlit prints in the browser (usually `http://localhost:8501`), 
 
 ### 8. Run CLI prediction
 
-From the repo root, after training has produced the default artifact names:
+From the repo root, after training has produced the default files under **`artifacts/`**:
 
 ```bash
 python app/predict_cli.py --text "Congratulations, you've won a prize!"
@@ -224,7 +224,7 @@ python app/predict_cli.py --text "Congratulations, you've won a prize!"
 Custom artifact paths:
 
 ```bash
-python app/predict_cli.py --text "Hello, are we still on for lunch?" --vectorizer vectorizer.pkl --model model.pkl
+python app/predict_cli.py --text "Hello, are we still on for lunch?" --vectorizer artifacts/vectorizer.pkl --model artifacts/model.pkl
 ```
 
 **Output:** prints **`1`** for spam and **`0`** for ham (consistent with label encoding in `src/data.py`).
@@ -263,8 +263,8 @@ python scripts/benchmark_models.py --max-runs 50 --out-csv benchmark_results.csv
 |------|-------------|
 | `data/raw/spam.csv` | Raw Kaggle export (Windows-1252) |
 | `data/raw/spam_utf8.csv` | UTF-8 copy used for pandas/sklearn |
-| `vectorizer.pkl` | Fitted `TfidfVectorizer` |
-| `model.pkl` | Fitted `MultinomialNB` classifier |
+| `artifacts/vectorizer.pkl` | Fitted `TfidfVectorizer` (default save path) |
+| `artifacts/model.pkl` | Fitted `MultinomialNB` classifier (default save path) |
 | `benchmark_results.csv` | Benchmark runs (when using `benchmark_models.py`) |
 
 ---

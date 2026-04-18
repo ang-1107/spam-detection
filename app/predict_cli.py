@@ -6,14 +6,15 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+from src.paths import DEFAULT_MODEL_PATH, DEFAULT_VECTORIZER_PATH
 from src.preprocess import ensure_nltk_resources
 from src.inference import load_artifacts, predict_text
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("--text", required=True)
-    p.add_argument("--vectorizer", default="vectorizer.pkl")
-    p.add_argument("--model", default="model.pkl")
+    p.add_argument("--vectorizer", default=str(DEFAULT_VECTORIZER_PATH))
+    p.add_argument("--model", default=str(DEFAULT_MODEL_PATH))
     args = p.parse_args()
 
     ensure_nltk_resources()

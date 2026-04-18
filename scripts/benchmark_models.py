@@ -15,6 +15,7 @@ if str(_ROOT) not in sys.path:
 
 import numpy as np
 import pandas as pd
+from scipy.sparse import csr_matrix
 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, f1_score, confusion_matrix
@@ -169,10 +170,10 @@ def evaluate_run(
         stratify=y if len(np.unique(y)) > 1 else None,
     )
 
-    # vectorize
+    # vectorize (csr_matrix: stubs know .toarray() for GaussianNB dense path)
     vectorizer = build_vectorizer(vec_name, vec_params)
-    X_train = vectorizer.fit_transform(X_train_txt)
-    X_test = vectorizer.transform(X_test_txt)
+    X_train = csr_matrix(vectorizer.fit_transform(X_train_txt))
+    X_test = csr_matrix(vectorizer.transform(X_test_txt))
 
     # model
     clf = build_model(model_name, model_params)
@@ -189,8 +190,10 @@ def evaluate_run(
     y_pred = clf.predict(X_test_eval)
 
     acc = accuracy_score(y_test, y_pred)
-    prec = precision_score(y_test, y_pred, pos_label=positive_label, zero_division=0)
-    f1 = f1_score(y_test, y_pred, pos_label=positive_label, zero_division=0)
+    prec = precision_score(
+        y_test, y_pred, pos_label=positive_label, zero_division="0"
+    )
+    f1 = f1_score(y_test, y_pred, pos_label=positive_label, zero_division="0")
     cm = confusion_matrix(y_test, y_pred).tolist()
 
     return {
@@ -233,8 +236,8 @@ def main():
     convert_windows1252_to_utf8(str(input_path), str(utf8_path))
     df = load_and_clean_dataframe(str(utf8_path))
 
-    X_text = df["text"].astype(str).values
-    y = df["target"].values
+    X_text = np.asarray(df["text"].astype(str).values)
+    y = np.asarray(df["target"].values)
 
     # --- Ablations for preprocessing (toggle significant steps) ---
     preprocess_grid = [

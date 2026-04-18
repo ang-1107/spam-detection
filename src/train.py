@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import pickle
+from pathlib import Path
 from typing import Dict, Any
 
 import numpy as np
@@ -11,19 +12,20 @@ from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_score
 
 from .features import add_transformed_text, fit_tfidf
+from .paths import DEFAULT_MODEL_PATH, DEFAULT_VECTORIZER_PATH
 
 @dataclass
 class TrainConfig:
     test_size: float = 0.2
     random_state: int = 2
-    vectorizer_path: str = "vectorizer.pkl"
-    model_path: str = "model.pkl"
+    vectorizer_path: str = str(DEFAULT_VECTORIZER_PATH)
+    model_path: str = str(DEFAULT_MODEL_PATH)
 
 def train_mnb_tfidf(df: pd.DataFrame, cfg: TrainConfig) -> Dict[str, Any]:
     """
       - TF-IDF
       - MultinomialNB
-      - save vectorizer.pkl + model.pkl
+      - save under artifacts/ (defaults: vectorizer.pkl, model.pkl)
     """
     df2 = add_transformed_text(df)
 
@@ -61,7 +63,7 @@ def train_mnb_tfidf(df: pd.DataFrame, cfg: TrainConfig) -> Dict[str, Any]:
         "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
     }
 
-    # Save artifacts using pickle (exactly as in notebook)
+    Path(cfg.vectorizer_path).parent.mkdir(parents=True, exist_ok=True)
     with open(cfg.vectorizer_path, "wb") as f:
         pickle.dump(tfidf, f)
     with open(cfg.model_path, "wb") as f:

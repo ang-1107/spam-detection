@@ -8,6 +8,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from src.data import convert_windows1252_to_utf8, load_and_clean_dataframe
+from src.paths import DEFAULT_MODEL_PATH, DEFAULT_VECTORIZER_PATH
 from src.preprocess import ensure_nltk_resources
 from src.train import TrainConfig, train_mnb_tfidf
 
@@ -26,8 +27,16 @@ def main():
     p = argparse.ArgumentParser(description="Train TF-IDF + MultinomialNB spam classifier (notebook-equivalent).")
     p.add_argument("--input", default=str(DEFAULT_SPAM_CSV), help=f"Input spam.csv (default: {DEFAULT_SPAM_CSV})")
     p.add_argument("--utf8", default=str(DEFAULT_SPAM_UTF8), help=f"UTF-8 converted CSV output (default: {DEFAULT_SPAM_UTF8})")
-    p.add_argument("--vectorizer", default="vectorizer.pkl", help="Where to save TF-IDF vectorizer pickle")
-    p.add_argument("--model", default="model.pkl", help="Where to save MultinomialNB model pickle")
+    p.add_argument(
+        "--vectorizer",
+        default=str(DEFAULT_VECTORIZER_PATH),
+        help=f"Where to save TF-IDF vectorizer pickle (default: {DEFAULT_VECTORIZER_PATH})",
+    )
+    p.add_argument(
+        "--model",
+        default=str(DEFAULT_MODEL_PATH),
+        help=f"Where to save MultinomialNB model pickle (default: {DEFAULT_MODEL_PATH})",
+    )
     p.add_argument("--test-size", type=float, default=0.2)
     p.add_argument("--random-state", type=int, default=2)
     args = p.parse_args()

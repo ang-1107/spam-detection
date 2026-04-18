@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import pickle
-from typing import Any, Tuple
+from pathlib import Path
+from typing import Any, Tuple, Union
 
+from .paths import DEFAULT_MODEL_PATH, DEFAULT_VECTORIZER_PATH
 from .preprocess import transform_text
+
+PathLike = Union[str, Path]
 
 
 def load_artifacts(
-    vectorizer_path: str = "vectorizer.pkl",
-    model_path: str = "model.pkl",
+    vectorizer_path: PathLike = DEFAULT_VECTORIZER_PATH,
+    model_path: PathLike = DEFAULT_MODEL_PATH,
 ) -> Tuple[Any, Any]:
     with open(vectorizer_path, "rb") as f:
         vectorizer = pickle.load(f)
